@@ -52,6 +52,10 @@ enum pageflags {
 	PG_readahead,		
 	__NR_PAGEFLAGS,
 
+#ifdef CONFIG_KSM_CHECK_PAGE
+	/* page has been scanned by odd KSM cycle */
+	PG_ksm_scan1 = PG_owner_priv_1,
+#endif
 	
 	PG_checked = PG_owner_priv_1,
 
