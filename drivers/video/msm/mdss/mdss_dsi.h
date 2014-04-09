@@ -251,6 +251,7 @@ struct mdss_dsi_ctrl_pdata {
 	int (*partial_update_fnc) (struct mdss_panel_data *pdata);
 	int (*check_status) (struct mdss_dsi_ctrl_pdata *pdata);
 	int (*cmdlist_commit)(struct mdss_dsi_ctrl_pdata *ctrl, int from_mdp);
+	int (*set_hbm)(struct mdss_dsi_ctrl_pdata *ctrl, int state);
 	struct mdss_panel_data panel_data;
 	unsigned char *ctrl_base;
 	int reg_size;
@@ -329,6 +330,9 @@ struct mdss_dsi_ctrl_pdata {
 	int brt_high;
 	int brt_extra;
 	int brt_max;
+
+	struct dsi_panel_cmds hbm_on_cmds;
+	struct dsi_panel_cmds hbm_off_cmds;
 };
 
 struct dsi_status_data {

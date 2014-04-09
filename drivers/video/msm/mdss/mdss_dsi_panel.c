@@ -161,7 +161,7 @@ u32 mdss_dsi_panel_cmd_read(struct mdss_dsi_ctrl_pdata *ctrl, char cmd0,
 	return 0;
 }
 
-static void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
+static int mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
 			struct dsi_panel_cmds *pcmds)
 {
 	struct dcs_cmd_req cmdreq;
@@ -590,6 +590,9 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 
 	mipi  = &pdata->panel_info.mipi;
 
+	if (ctrl->set_hbm)
+		ctrl->set_hbm(ctrl, 0);
+
 	if(pwrctrl_pdata.bkl_config)
 		pwrctrl_pdata.bkl_config(&ctrl->panel_data, 0);
 
@@ -716,8 +719,13 @@ static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 		len -= dchdr->dlen;
 	}
 
-	data = of_get_property(np, link_key, NULL);
-	if (data && !strcmp(data, "dsi_hs_mode"))
+	if (link_key) {
+		data = of_get_property(np, link_key, NULL);
+		if (data && !strcmp(data, "dsi_hs_mode"))
+			pcmds->link_state = DSI_HS_MODE;
+		else
+			pcmds->link_state = DSI_LP_MODE;
+	} else
 		pcmds->link_state = DSI_HS_MODE;
 	else
 		pcmds->link_state = DSI_LP_MODE;
@@ -885,8 +893,182 @@ static int mdss_dsi_parse_reset_seq(struct device_node *np,
 	return 0;
 }
 
-extern int htc_mdss_dsi_parse_dcs_cmds(struct device_node *np,
-		struct dsi_panel_cmds *pcmds, char *cmd_key, char *link_key);
+static void mdss_dsi_parse_roi_alignment(struct device_node *np,
+		struct mdss_panel_info *pinfo)
+{
+	int len = 0;
+	u32 value[6];
+	struct property *data;
+	data = of_find_property(np, "qcom,panel-roi-alignment", &len);
+	len /= sizeof(u32);
+	if (!data || (len != 6)) {
+		pr_debug("%s: Panel roi alignment not found", __func__);
+	} else {
+		int rc = of_property_read_u32_array(np,
+				"qcom,panel-roi-alignment", value, len);
+		if (rc)
+			pr_debug("%s: Error reading panel roi alignment values",
+					__func__);
+		else {
+			pinfo->xstart_pix_align = value[0];
+			pinfo->width_pix_align = value[1];
+			pinfo->ystart_pix_align = value[2];
+			pinfo->height_pix_align = value[3];
+			pinfo->min_width = value[4];
+			pinfo->min_height = value[5];
+		}
+
+		pr_debug("%s: ROI alignment: [%d, %d, %d, %d, %d, %d]",
+				__func__, pinfo->xstart_pix_align,
+				pinfo->width_pix_align, pinfo->ystart_pix_align,
+				pinfo->height_pix_align, pinfo->min_width,
+				pinfo->min_height);
+	}
+}
+
+static int mdss_dsi_parse_panel_features(struct device_node *np,
+	struct mdss_dsi_ctrl_pdata *ctrl)
+{
+	struct mdss_panel_info *pinfo;
+
+	if (!np || !ctrl) {
+		pr_err("%s: Invalid arguments\n", __func__);
+		return -ENODEV;
+	}
+
+	pinfo = &ctrl->panel_data.panel_info;
+
+	pinfo->cont_splash_enabled = of_property_read_bool(np,
+		"qcom,cont-splash-enabled");
+
+	if (pinfo->mipi.mode == DSI_CMD_MODE) {
+		pinfo->partial_update_enabled = of_property_read_bool(np,
+				"qcom,partial-update-enabled");
+		pr_info("%s: partial_update_enabled=%d\n", __func__,
+					pinfo->partial_update_enabled);
+		if (pinfo->partial_update_enabled) {
+			ctrl->set_col_page_addr = mdss_dsi_set_col_page_addr;
+			pinfo->partial_update_dcs_cmd_by_left =
+					of_property_read_bool(np,
+					"qcom,partial-update-dcs-cmd-by-left");
+			pinfo->partial_update_roi_merge =
+					of_property_read_bool(np,
+					"qcom,partial-update-roi-merge");
+		}
+	}
+
+	pinfo->ulps_feature_enabled = of_property_read_bool(np,
+		"qcom,ulps-enabled");
+	pr_info("%s: ulps feature %s", __func__,
+		(pinfo->ulps_feature_enabled ? "enabled" : "disabled"));
+
+	return 0;
+}
+
+static void mdss_dsi_parse_panel_horizintal_line_idle(struct device_node *np,
+	struct mdss_dsi_ctrl_pdata *ctrl)
+{
+	const u32 *src;
+	int i, len, cnt;
+	struct panel_horizontal_idle *kp;
+
+	if (!np || !ctrl) {
+		pr_err("%s: Invalid arguments\n", __func__);
+		return;
+	}
+
+	src = of_get_property(np, "qcom,mdss-dsi-hor-line-idle", &len);
+	if (!src || len == 0)
+		return;
+
+	cnt = len % 3; /* 3 fields per entry */
+	if (cnt) {
+		pr_err("%s: invalid horizontal idle len=%d\n", __func__, len);
+		return;
+	}
+
+	cnt = len / sizeof(u32);
+
+	kp = kzalloc(sizeof(*kp) * (cnt / 3), GFP_KERNEL);
+	if (kp == NULL) {
+		pr_err("%s: No memory\n", __func__);
+		return;
+	}
+
+	ctrl->line_idle = kp;
+	for (i = 0; i < cnt; i += 3) {
+		kp->min = be32_to_cpu(src[i]);
+		kp->max = be32_to_cpu(src[i+1]);
+		kp->idle = be32_to_cpu(src[i+2]);
+		kp++;
+		ctrl->horizontal_idle_cnt++;
+	}
+
+	pr_debug("%s: horizontal_idle_cnt=%d\n", __func__,
+				ctrl->horizontal_idle_cnt);
+}
+
+static int mdss_panel_parse_hbm(struct device_node *np,
+				struct mdss_panel_info *pinfo,
+				struct mdss_dsi_ctrl_pdata *ctrl_pdata)
+{
+	int rc;
+	const char *data;
+
+	/* Default HBM feature to off */
+	pinfo->hbm_state = 0;
+	pinfo->hbm_feature_enabled = 0;
+
+	data = of_get_property(np, "qcom,mdss-dsi-hbm-on-command", NULL);
+	if (!data)
+		return 0;
+
+	rc = mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->hbm_on_cmds,
+				"qcom,mdss-dsi-hbm-on-command", NULL);
+	if (rc) {
+		pr_err("%s : Failed parsing HBM on commands, rc = %d\n",
+			__func__, rc);
+		return rc;
+	}
+
+	rc = mdss_dsi_parse_dcs_cmds(np, &ctrl_pdata->hbm_off_cmds,
+				"qcom,mdss-dsi-hbm-off-command", NULL);
+	if (rc) {
+		pr_err("%s : Failed parsing HBM off commands, rc = %d\n",
+			__func__, rc);
+		return rc;
+	}
+	pinfo->hbm_feature_enabled = 1;
+	return 0;
+}
+
+int mdss_dsi_panel_set_hbm(struct mdss_dsi_ctrl_pdata *ctrl, int state)
+{
+	int rc;
+	if (!ctrl->panel_data.panel_info.hbm_feature_enabled) {
+		pr_debug("HBM is disabled, ignore request\n");
+		return 0;
+	}
+
+	if (ctrl->panel_data.panel_info.hbm_state == state) {
+		pr_debug("HBM already in request state %d\n",
+			state);
+		return 0;
+	}
+
+	if (state)
+		rc = mdss_dsi_panel_cmds_send(ctrl, &ctrl->hbm_on_cmds);
+	else
+		rc = mdss_dsi_panel_cmds_send(ctrl, &ctrl->hbm_off_cmds);
+
+	if (!rc)
+		ctrl->panel_data.panel_info.hbm_state = state;
+	else
+		pr_err("%s : Failed to set HBM state to %d\n",
+			__func__, state);
+
+	return rc;
+}
 
 static int mdss_panel_parse_dt(struct device_node *np,
 			struct mdss_dsi_ctrl_pdata *ctrl_pdata)
@@ -1204,6 +1386,11 @@ static int mdss_panel_parse_dt(struct device_node *np,
 		PR_DISP_INFO("%s: PWM type is PMIC\n", __func__);
 	}
 
+	if (mdss_panel_parse_hbm(np, pinfo, ctrl_pdata)) {
+		pr_err("Error parsing HBM\n");
+		goto error;
+	}
+
 	rc = of_property_read_u32(np, "htc,mdss-camera-blk", &tmp);
 	pinfo->camera_blk = (!rc ? tmp : BRI_SETTING_DEF);
 
@@ -1403,6 +1590,8 @@ int mdss_dsi_panel_init(struct device_node *node,
 	ctrl_pdata->off = mdss_dsi_panel_off;
 	ctrl_pdata->panel_data.set_backlight = mdss_dsi_panel_bl_ctrl;
 	ctrl_pdata->panel_data.display_on = mdss_dsi_display_on;
+
+	ctrl_pdata->set_hbm = mdss_dsi_panel_set_hbm;
 
 /* Backlight Dimmer */
 	backlight_dimmer_kobj = kobject_create_and_add("backlight_dimmer", NULL);
