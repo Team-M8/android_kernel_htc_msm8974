@@ -79,5 +79,5 @@ obj-$(CONFIG_CABLE_DETECT_8XXX) += cable_detect_8xxx.o
 obj-y += time_helper.o
 obj-$(CONFIG_QPNP_VIBRATOR_PWM) += qpnp-vibrator-pwm.o
 obj-$(CONFIG_UID_CPUTIME) += uid_cputime.o
-
 KBUILD_CFLAGS	+=-Wno-misleading-indentation
+obj-$(CONFIG_BLX) += blx.o

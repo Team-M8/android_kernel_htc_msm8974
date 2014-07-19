@@ -29,6 +29,11 @@
 #include <mach/devices_cmdline.h>
 #include <mach/devices_dtb.h>
 #include <linux/qpnp/qpnp-charger.h>
+#ifdef CONFIG_BLX
+#include <linux/blx.h>
+
+int soc_level, soc_flag;
+#endif
 
 #define USB_MA_0       (0)
 #define USB_MA_500     (500)
@@ -196,7 +201,7 @@ int unregister_notifier_wireless_charger(struct notifier_block *nb)
 static int zcharge_enabled;
 int htc_battery_get_zcharge_mode(void)
 {
-#if 0	
+#if 0
 	return zcharge_enabled;
 #else
 	return 1;
@@ -920,7 +925,7 @@ static int htc_power_get_property(struct power_supply *psy,
 		if (psy->type == POWER_SUPPLY_TYPE_USB_DCP)
 			val->intval = USB_MA_1600 * 1000;
 		break;
-	
+
 	case POWER_SUPPLY_PROP_PRESENT :
 		if (charger == CHARGER_BATTERY)
 			val->intval  = 0;
@@ -1158,7 +1163,7 @@ static unsigned int get_htc_debug_flag(void)
 {
 
         unsigned int cfg = 0 ;
-    
+
         if (get_tamper_sf() == 0) {
                 if ((get_kernel_flag() & KERNEL_FLAG_KEEP_CHARG_ON)
 					|| (get_kernel_flag() & KERNEL_FLAG_ENABLE_FAST_CHARGE)) {
@@ -1183,6 +1188,10 @@ int htc_battery_core_update_changed(void)
 	int is_send_wireless_charger_uevent = 0;
 	static int batt_temp_over_68c_count = 0;
 	unsigned int dbg_cfg = 0 ;
+
+#ifdef CONFIG_BLX
+	int rc;
+#endif
 
 	if (battery_register) {
 		BATT_ERR("No battery driver exists.");
@@ -1217,7 +1226,7 @@ int htc_battery_core_update_changed(void)
 			CHARGER_WIRELESS == new_batt_info_rep.charging_source)
 			is_send_wireless_charger_uevent = 1;
 
-		
+
 		if (htc_battery_is_support_qc20()) {
 			if (CHARGER_AC == new_batt_info_rep.charging_source) {
 				if (htc_battery_check_cable_type_from_usb() == DWC3_DCP) {
@@ -1250,7 +1259,7 @@ int htc_battery_core_update_changed(void)
 			battery_over_loading = 0;
 	}
 
-	
+
 	if (battery_core_info.func.func_notify_pnpmgr_charging_enabled) {
 		if (battery_core_info.rep.charging_enabled !=
 				new_batt_info_rep.charging_enabled)
@@ -1268,12 +1277,12 @@ int htc_battery_core_update_changed(void)
 			battery_core_info.rep.batt_temp = 680;
 		}
 	} else {
-		
+
 		batt_temp_over_68c_count = 0;
 	}
 
-	
-	
+
+
 	if (test_power_monitor || (test_ftm_mode == 1)) {
 		BATT_LOG("test_power_monitor(%d) or test_ftm_mode(%d) is set: overwrite fake batt info.",
 				test_power_monitor, test_ftm_mode);
@@ -1304,6 +1313,22 @@ int htc_battery_core_update_changed(void)
 	battery_core_info.rep.batt_state = new_batt_info_rep.batt_state;
 #endif
 
+#ifdef CONFIG_BLX
+	soc_level = battery_core_info.rep.level;
+
+	if ((soc_level >= get_charginglimit()) && (soc_level != 100)) {
+			htc_battery_charger_disable();
+			soc_flag = 1;
+	} else if ((soc_level < get_charginglimit()) && (soc_flag)) {
+		rc = battery_core_info.func.func_charger_control(ENABLE_CHARGER);
+		if (rc) {
+			BATT_ERR("charger control failed!");
+			return -1;
+		}
+		soc_flag = 0;
+	}
+#endif
+
 	if (battery_core_info.rep.charging_source == CHARGER_BATTERY)
 		battery_core_info.htc_charge_full = 0;
 	else {
@@ -1317,7 +1342,7 @@ int htc_battery_core_update_changed(void)
 				battery_core_info.htc_charge_full = 0;
 		}
 
-		
+
 		if (battery_over_loading >= 2) {
 			battery_core_info.htc_charge_full = 0;
 			battery_over_loading = 0;
@@ -1327,7 +1352,7 @@ int htc_battery_core_update_changed(void)
 	battery_core_info.update_time = jiffies;
 	mutex_unlock(&battery_core_info.info_lock);
 
-	
+
 	dbg_cfg = get_htc_debug_flag();
 
 	BATT_EMBEDDED("ID=%d,level=%d,level_raw=%d,vol=%d,temp=%d,current=%d,"
@@ -1353,7 +1378,7 @@ int htc_battery_core_update_changed(void)
 			dbg_cfg);
 
 
-	
+
 	if (is_send_batt_uevent) {
 		power_supply_changed(&htc_power_supplies[BATTERY_SUPPLY]);
 		BATT_LOG("power_supply_changed: battery");
@@ -1413,7 +1438,7 @@ int htc_battery_core_register(struct device *dev,
 					htc_battery->func_charger_control;
 	if (htc_battery->func_set_max_input_current)
 		battery_core_info.func.func_set_max_input_current =
-					htc_battery->func_set_max_input_current;	
+					htc_battery->func_set_max_input_current;
 	if (htc_battery->func_context_event_handler)
 		battery_core_info.func.func_context_event_handler =
 					htc_battery->func_context_event_handler;
@@ -1443,7 +1468,7 @@ int htc_battery_core_register(struct device *dev,
 		battery_core_info.func.func_ftm_charger_control =
 					htc_battery->func_ftm_charger_control;
 
-	
+
 	for (i = 0; i < ARRAY_SIZE(htc_power_supplies); i++) {
 		rc = power_supply_register(dev, &htc_power_supplies[i]);
 		if (rc)
@@ -1451,10 +1476,10 @@ int htc_battery_core_register(struct device *dev,
 				" (%d)\n", rc);
 	}
 
-	
+
 	htc_battery_create_attrs(htc_power_supplies[CHARGER_BATTERY].dev);
 
-	
+
 	charger_ctrl_stat = ENABLE_CHARGER;
 	INIT_WORK(&batt_charger_ctrl_work, batt_charger_ctrl_func);
 	alarm_init(&batt_charger_ctrl_alarm,
@@ -1463,7 +1488,7 @@ int htc_battery_core_register(struct device *dev,
 	batt_charger_ctrl_wq =
 			create_singlethread_workqueue("charger_ctrl_timer");
 
-	
+
 	battery_core_info.update_time = jiffies;
 	battery_core_info.present = 1;
 	battery_core_info.htc_charge_full = 0;
@@ -1477,9 +1502,9 @@ int htc_battery_core_register(struct device *dev,
 	battery_core_info.rep.full_bat = 1580000;
 	battery_core_info.rep.full_level = 100;
 	battery_core_info.rep.full_level_dis_batt_chg = 100;
-	
+
 	battery_core_info.rep.temp_fault = -1;
-	
+
 	battery_core_info.rep.batt_state = 0;
 	battery_core_info.rep.cable_ready = 0;
 	battery_core_info.rep.overload = 0;
