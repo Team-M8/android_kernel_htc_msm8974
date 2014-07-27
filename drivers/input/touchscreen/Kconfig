@@ -490,6 +490,10 @@ config TOUCHSCREEN_SYNAPTICS_3K
         help
           This enables support for Synaptics RMI4 over I2C based touchscreens.
 
+config TOUCHSCREEN_SYNAPTICS_WAKE_GESTURES
+        bool "Wake gestures interface for SYNAPTICS_3k based touchscreens"
+        default y
+
 config TOUCHSCREEN_SYNAPTICS_I2C_RMI
 	tristate "Synaptics i2c touchscreen"
 	depends on I2C
