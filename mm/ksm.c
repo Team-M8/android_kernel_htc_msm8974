@@ -189,6 +189,38 @@ static unsigned int ksm_thread_pages_to_scan = 250;
 /* Milliseconds ksmd should sleep between batches */
 static unsigned int ksm_thread_sleep_millisecs = 1500;
 
+#ifdef CONFIG_KSM_HTC_POLICY
+/* Enable htc scan strategy. */
+static unsigned int ksm_enable_smart_scan = 1;
+
+/* When ksm threasd is stopped by htc scan strategy, how many newly-added bytes could wake up thread. */
+static unsigned int ksm_resume_threshold_kb = (64 * 1024);
+
+/* The number of retry for suspend check, it need to pass suspend check X time continuously to suspend ksm thread. */
+static int ksm_suspend_retry_count = 3;
+static int ksm_current_suspend_retry_count = 3;
+
+/* If newly-merged page number is lower than threshould, stop ksm thread. */
+static unsigned int ksm_suspend_threshold_count = 5;
+
+/* Accumulated bytes for resuming ksm thread. */
+static unsigned long ksm_accumulated_bytes = 0;
+
+/* Debug variables for smart scan. */
+static enum KSM_RUN_STATE ksm_run_state = KRS_RUN;
+static unsigned int ksm_suspend_count = 0;
+static unsigned int ksm_resume_count = 0;
+static unsigned int ksm_scanning_count = 0;
+static unsigned long ksm_newly_added_bytes = 0;
+
+static char *resume_black_list[] = {
+	"sh",
+	"cat",
+	"logcat",
+	"ls",
+	"adbd"
+};
+#endif
 /* Boolean to indicate whether to use deferred timer or not */
 static bool use_deferred_timer;
 
@@ -1410,31 +1442,6 @@ next_mm:
 
 	ksm_scan.seqnr++;
 	return NULL;
-}
-
-static inline int is_page_scanned(struct page *page)
-{
-#ifdef CONFIG_KSM_CHECK_PAGE
-	/* page is already marked as ksm, so this will be simple merge */
-	if (PageKsm(page))
-		return 0;
-
-	if (ksm_scan.seqnr & 0x1) {
-		/* odd cycle */
-		/* clear even cycle bit */
-		ClearPageKsmScan0(page);
-		/* get old value and mark it scanned */
-		return TestSetPageKsmScan1(page);
-	} else {
-		/* even cycle */
-		/* clear odd cycle bit */
-		ClearPageKsmScan1(page);
-		/* get old value and mark it scanned */
-		return TestSetPageKsmScan0(page);
-	}
-#else
-	return 0;
-#endif
 }
 
 static inline int is_page_scanned(struct page *page)
