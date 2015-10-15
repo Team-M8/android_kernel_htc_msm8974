@@ -4,6 +4,23 @@
  *  Copyright (C) 1991, 1992  Linus Torvalds
  */
 
+/*
+ * #!-checking implemented by tytso.
+ */
+/*
+ * Demand-loading implemented 01.12.91 - no need to read anything but
+ * the header into memory. The inode of the executable is put into
+ * "current->executable", and page faults do the actual loading. Clean.
+ *
+ * Once more I can proudly say that linux stood up to being changed: it
+ * was less than 2 hours work to get demand-loading completely implemented.
+ *
+ * Demand loading changed July 1993 by Eric Youngdale.   Use mmap instead,
+ * current->executable is only used by the procfs.  This allows a dispatch
+ * table to check for several different types  of binary formats.  We keep
+ * trying until we recognize the file or we run out of supported binary
+ * formats.
+ */
 
 #include <linux/slab.h>
 #include <linux/file.h>
@@ -38,6 +55,7 @@
 #include <linux/pipe_fs_i.h>
 #include <linux/oom.h>
 #include <linux/compat.h>
+#include <linux/ksm.h>
 
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
@@ -989,7 +1007,7 @@ void setup_new_exec(struct linux_binprm * bprm)
 	   group */
 
 	current->self_exec_id++;
-			
+
 	flush_signal_handlers(current, 0);
 	flush_old_files(current->files);
 }
@@ -1141,6 +1159,12 @@ static int check_unsafe_exec(struct linux_binprm *bprm)
 	return res;
 }
 
+/*
+ * Fill the binprm structure from the inode.
+ * Check permissions, then read the first 128 (BINPRM_BUF_SIZE) bytes
+ *
+ * This may be called multiple times for binary chains (scripts for example).
+ */
 int prepare_binprm(struct linux_binprm *bprm)
 {
 	int retval;

@@ -734,6 +734,13 @@ void page_move_anon_rmap(struct page *page,
 	page->mapping = (struct address_space *) anon_vma;
 }
 
+/**
+ * __page_set_anon_rmap - set up new anonymous rmap
+ * @page:	Page to add to rmap
+ * @vma:	VM area to add page to.
+ * @address:	User virtual address of the mapping
+ * @exclusive:	the page is exclusively owned by the current process
+ */
 static void __page_set_anon_rmap(struct page *page,
 	struct vm_area_struct *vma, unsigned long address, int exclusive)
 {
