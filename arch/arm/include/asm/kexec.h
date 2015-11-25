@@ -61,8 +61,10 @@ extern void (*kexec_reinit)(void);
 extern void (*kexec_hardboot_hook)(void);
 #endif
 
-#endif 
-
 #endif /* CONFIG_KEXEC */
 
+
 #endif /* _ARM_KEXEC_H */
+
+#endif 
+

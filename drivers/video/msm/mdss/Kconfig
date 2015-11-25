@@ -92,5 +92,12 @@ config MDSS_DUMP_MDP_UNDERRUN
 
 config LCD_KCAL
 	depends on FB_MSM_MDSS
-	bool "Enable sysfs for LCD KCAL"
+	bool "Color control driver for MSM-MDSS devices"
 	default n
+
+config FB_MSM_MDSS_KCAL_CTRL
+	depends on FB_MSM_MDSS
+	bool "MDSS color control"
+	---help---
+	  Enable sysfs for rgb/lut control for mdss-mdp display controllers
+	  in the MDSS sub-system.

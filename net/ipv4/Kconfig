@@ -450,6 +450,94 @@ config TCP_CONG_CUBIC
 	among other techniques.
 	See http://www.csc.ncsu.edu/faculty/rhee/export/bitcp/cubic-paper.pdf
 
+config TCP_CONG_HSTCP
+	tristate "High Speed TCP"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	Sally Floyd's High Speed TCP (RFC 3649) congestion control.
+	A modification to TCP's congestion control mechanism for use
+	with large congestion windows. A table indicates how much to
+	increase the congestion window by when an ACK is received.
+ 	For more detail	see http://www.icir.org/floyd/hstcp.html
+
+config TCP_CONG_HTCP
+        tristate "H-TCP"
+        default m
+	---help---
+	H-TCP is a send-side only modifications of the TCP Reno
+	protocol stack that optimizes the performance of TCP
+	congestion control for high speed network links. It uses a
+	modeswitch to change the alpha and beta parameters of TCP Reno
+	based on network conditions and in a way so as to be fair with
+	other Reno and H-TCP flows.
+
+config TCP_CONG_HYBLA
+	tristate "TCP-Hybla congestion control algorithm"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	TCP-Hybla is a sender-side only change that eliminates penalization of
+	long-RTT, large-bandwidth connections, like when satellite legs are
+	involved, especially when sharing a common bottleneck with normal
+	terrestrial connections.
+
+config TCP_CONG_ILLINOIS
+	tristate "TCP Illinois"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	TCP-Illinois is a sender-side modification of TCP Reno for
+	high speed long delay links. It uses round-trip-time to
+	adjust the alpha and beta parameters to achieve a higher average
+	throughput and maintain fairness.
+
+	For further details see:
+	  http://www.ews.uiuc.edu/~shaoliu/tcpillinois/index.html
+
+config TCP_CONG_LP
+	tristate "TCP Low Priority"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	TCP Low Priority (TCP-LP), a distributed algorithm whose goal is
+	to utilize only the excess network bandwidth as compared to the
+	``fair share`` of bandwidth as targeted by TCP.
+	See http://www-ece.rice.edu/networks/TCP-LP/
+
+config TCP_CONG_SCALABLE
+	tristate "Scalable TCP"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	Scalable TCP is a sender-side only change to TCP which uses a
+	MIMD congestion control algorithm which has some nice scaling
+	properties, though is known to have fairness issues.
+	See http://www.deneholme.net/tom/scalable/
+
+config TCP_CONG_VEGAS
+	tristate "TCP Vegas"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	TCP Vegas is a sender-side only change to TCP that anticipates
+	the onset of congestion by estimating the bandwidth. TCP Vegas
+	adjusts the sending rate by modifying the congestion
+	window. TCP Vegas should provide less packet loss, but it is
+	not as aggressive as TCP Reno.
+
+config TCP_CONG_VENO
+	tristate "TCP Veno"
+	depends on EXPERIMENTAL
+	default n
+	---help---
+	TCP Veno is a sender-side only enhancement of TCP to obtain better
+	throughput over wireless networks. TCP Veno makes use of state
+	distinguishing to circumvent the difficult judgment of the packet loss
+	type. TCP Veno cuts down less congestion window in response to random
+	loss packets.
+	See <http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1177186> 
+
 config TCP_CONG_WESTWOOD
 	tristate "TCP Westwood+"
 	default m
@@ -463,81 +551,6 @@ config TCP_CONG_WESTWOOD
 	account the bandwidth used  at the time congestion is experienced.
 	TCP Westwood+ significantly increases fairness wrt TCP Reno in
 	wired networks and throughput over wireless links.
-
-config TCP_CONG_HTCP
-        tristate "H-TCP"
-        default m
-	---help---
-	H-TCP is a send-side only modifications of the TCP Reno
-	protocol stack that optimizes the performance of TCP
-	congestion control for high speed network links. It uses a
-	modeswitch to change the alpha and beta parameters of TCP Reno
-	based on network conditions and in a way so as to be fair with
-	other Reno and H-TCP flows.
-
-config TCP_CONG_HSTCP
-	tristate "High Speed TCP"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	Sally Floyd's High Speed TCP (RFC 3649) congestion control.
-	A modification to TCP's congestion control mechanism for use
-	with large congestion windows. A table indicates how much to
-	increase the congestion window by when an ACK is received.
- 	For more detail	see http://www.icir.org/floyd/hstcp.html
-
-config TCP_CONG_HYBLA
-	tristate "TCP-Hybla congestion control algorithm"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	TCP-Hybla is a sender-side only change that eliminates penalization of
-	long-RTT, large-bandwidth connections, like when satellite legs are
-	involved, especially when sharing a common bottleneck with normal
-	terrestrial connections.
-
-config TCP_CONG_VEGAS
-	tristate "TCP Vegas"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	TCP Vegas is a sender-side only change to TCP that anticipates
-	the onset of congestion by estimating the bandwidth. TCP Vegas
-	adjusts the sending rate by modifying the congestion
-	window. TCP Vegas should provide less packet loss, but it is
-	not as aggressive as TCP Reno.
-
-config TCP_CONG_SCALABLE
-	tristate "Scalable TCP"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	Scalable TCP is a sender-side only change to TCP which uses a
-	MIMD congestion control algorithm which has some nice scaling
-	properties, though is known to have fairness issues.
-	See http://www.deneholme.net/tom/scalable/
-
-config TCP_CONG_LP
-	tristate "TCP Low Priority"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	TCP Low Priority (TCP-LP), a distributed algorithm whose goal is
-	to utilize only the excess network bandwidth as compared to the
-	``fair share`` of bandwidth as targeted by TCP.
-	See http://www-ece.rice.edu/networks/TCP-LP/
-
-config TCP_CONG_VENO
-	tristate "TCP Veno"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	TCP Veno is a sender-side only enhancement of TCP to obtain better
-	throughput over wireless networks. TCP Veno makes use of state
-	distinguishing to circumvent the difficult judgment of the packet loss
-	type. TCP Veno cuts down less congestion window in response to random
-	loss packets.
-	See <http://ieeexplore.ieee.org/xpl/freeabs_all.jsp?arnumber=1177186> 
 
 config TCP_CONG_YEAH
 	tristate "YeAH TCP"
@@ -553,19 +566,6 @@ config TCP_CONG_YEAH
 
 	For further details look here:
 	  http://wil.cs.caltech.edu/pfldnet2007/paper/YeAH_TCP.pdf
-
-config TCP_CONG_ILLINOIS
-	tristate "TCP Illinois"
-	depends on EXPERIMENTAL
-	default n
-	---help---
-	TCP-Illinois is a sender-side modification of TCP Reno for
-	high speed long delay links. It uses round-trip-time to
-	adjust the alpha and beta parameters to achieve a higher average
-	throughput and maintain fairness.
-
-	For further details see:
-	  http://www.ews.uiuc.edu/~shaoliu/tcpillinois/index.html
 
 choice
 	prompt "Default TCP congestion control"
@@ -586,6 +586,9 @@ choice
 	config DEFAULT_HYBLA
 		bool "Hybla" if TCP_CONG_HYBLA=y
 
+	config DEFAULT_RENO
+		bool "Reno"
+
 	config DEFAULT_VEGAS
 		bool "Vegas" if TCP_CONG_VEGAS=y
 
@@ -594,9 +597,6 @@ choice
 
 	config DEFAULT_WESTWOOD
 		bool "Westwood" if TCP_CONG_WESTWOOD=y
-
-	config DEFAULT_RENO
-		bool "Reno"
 
 endchoice
 

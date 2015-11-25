@@ -916,7 +916,7 @@ static bool is_battery_present(struct qpnp_bms_chip *chip)
 static int get_battery_insertion_ocv_uv(struct qpnp_bms_chip *chip)
 {
 	union power_supply_propval ret = {0,};
-	int rc, vbat;
+	int rc, vbat = 0;
 
 	if (chip->batt_psy == NULL)
 		chip->batt_psy = power_supply_get_by_name("battery");
@@ -2078,7 +2078,7 @@ static int report_voltage_based_soc(struct qpnp_bms_chip *chip)
 #define REPORT_SOC_WAIT_MS		10000
 static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 {
-	int soc, soc_change;
+	int soc, soc_change = 0;
 	int time_since_last_change_sec, charge_time_sec = 0;
 	unsigned long last_change_sec;
 	struct timespec now;
@@ -2616,7 +2616,7 @@ static int calculate_state_of_charge(struct qpnp_bms_chip *chip,
 					int batt_temp)
 {
 	struct soc_params params;
-	int soc, previous_soc, shutdown_soc, new_calculated_soc;
+	int soc = 0, previous_soc, shutdown_soc, new_calculated_soc;
 	int remaining_usable_charge_uah;
 
 	calculate_soc_params(chip, raw, &params, batt_temp);
@@ -3496,7 +3496,7 @@ static void batfet_open_work(struct work_struct *work)
 {
 	int i;
 	int rc;
-	int result_ua;
+	int result_ua = 0;
 	u8 orig_delay, sample_delay;
 	struct qpnp_bms_chip *chip = container_of(work,
 				struct qpnp_bms_chip,
@@ -4462,7 +4462,7 @@ static void disable_ocv_update_with_reason(bool disable, int reason)
 static void pm8941_btm_voltage_alarm_notify(enum qpnp_tm_state state, void *ctx)
 {
 	struct qpnp_bms_chip *chip = ctx;
-	int vbat_uv;
+	int vbat_uv = 0;
 	struct qpnp_vadc_result result;
 
 	qpnp_vadc_read(chip->vadc_dev, VBAT_SNS, &result);

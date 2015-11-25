@@ -79,6 +79,7 @@ static void async_run_entry_fn(struct work_struct *work)
 		container_of(work, struct async_entry, work);
 	unsigned long flags;
 	ktime_t uninitialized_var(calltime), delta, rettime;
+	unsigned long long duration;
 	struct async_domain *running = entry->running;
 
 	
@@ -97,6 +98,18 @@ static void async_run_entry_fn(struct work_struct *work)
 	if (initcall_debug && system_state == SYSTEM_BOOTING) {
 		rettime = ktime_get();
 		delta = ktime_sub(rettime, calltime);
+		duration = (unsigned long long) ktime_to_ns(delta) >> 10;
+
+		if(duration >= initcall_debug)
+			printk(KERN_WARNING "initcall %lli_%pF returned 0 after %lld usecs\n",
+				(long long)entry->cookie,
+				entry->func,
+				duration);
+		else
+			printk(KERN_DEBUG "initcall %lli_%pF returned 0 after %lld usecs\n",
+				(long long)entry->cookie,
+				entry->func,
+				duration);
 	}
 
 	

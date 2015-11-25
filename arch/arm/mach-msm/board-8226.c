@@ -37,6 +37,7 @@
 #include <mach/board.h>
 #include <mach/msm_bus.h>
 #include <mach/gpiomux.h>
+#include <mach/msm_kcal.h>
 #include <mach/msm_iomap.h>
 #include <mach/restart.h>
 #ifdef CONFIG_ION_MSM
@@ -146,6 +147,7 @@ void __init msm8226_add_drivers(void)
 	cpr_regulator_init();
 	tsens_tm_init_driver();
 	msm_thermal_device_init();
+	msm_kcal_ctrl_init();
 }
 
 void __init msm8226_init(void)

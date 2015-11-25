@@ -20,6 +20,7 @@
 #include <mach/msm_bus_board.h>
 #include <linux/ktime.h>
 #include <linux/delay.h>
+#include <linux/cpufreq.h>
 
 #include "kgsl.h"
 #include "kgsl_pwrscale.h"
@@ -37,6 +38,14 @@
 
 #define INIT_UDELAY		200
 #define MAX_UDELAY		2000
+
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_GPU_CONTROL
+extern bool gpu_busy_state;
+#endif
+
+#ifdef CONFIG_CPU_FREQ_GOV_ELEMENTALX
+int graphics_boost = 6;
+#endif
 
 struct clk_pair {
 	const char *name;
@@ -177,6 +186,9 @@ void kgsl_pwrctrl_pwrlevel_change(struct kgsl_device *device,
 
 
 	trace_kgsl_pwrlevel(device, pwr->active_pwrlevel, pwrlevel->gpu_freq);
+#ifdef CONFIG_CPU_FREQ_GOV_ELEMENTALX
+        graphics_boost = pwr->active_pwrlevel;
+#endif
 }
 
 EXPORT_SYMBOL(kgsl_pwrctrl_pwrlevel_change);
@@ -829,6 +841,12 @@ static void kgsl_pwrctrl_busy_time(struct kgsl_device *device, bool on_time)
 	if ((clkstats->elapsed > UPDATE_BUSY_VAL) ||
 		!test_bit(KGSL_PWRFLAGS_AXI_ON, &device->pwrctrl.power_flags)) {
 		update_statistics(device);
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_GPU_CONTROL
+	if (on_time)
+		gpu_busy_state = true;
+	else
+		gpu_busy_state = false;
+#endif
 	}
 }
 

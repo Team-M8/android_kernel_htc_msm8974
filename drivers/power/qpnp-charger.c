@@ -43,6 +43,11 @@
 #ifdef CONFIG_HTC_BATT_8960
 #include "mach/htc_battery_cell.h"
 #endif
+
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#endif
+
 #ifdef pr_debug
 #undef pr_debug
 #endif
@@ -3804,7 +3809,10 @@ int pm8941_set_pwrsrc_and_charger_enable(enum htc_power_source_type src,
 	case HTC_PWR_SOURCE_TYPE_DETECTING:
 	case HTC_PWR_SOURCE_TYPE_UNKNOWN_USB:
 	case HTC_PWR_SOURCE_TYPE_USB:
-		mA = USB_MA_500;
+		if (force_fast_charge)
+			mA = USB_MA_1100;
+		else
+			mA = USB_MA_500;
 		break;
 	case HTC_PWR_SOURCE_TYPE_AC:
 	case HTC_PWR_SOURCE_TYPE_9VAC:
@@ -8142,7 +8150,11 @@ qpnp_charger_probe(struct spmi_device *spmi)
 
 	qpnp_chg_read(chip, &pmic_rev, REG_PMIC_HWREV, 1);
 #ifdef CONFIG_ARCH_MSM8974
+/*<<<<<<< HEAD*/
 	pr_info("pm8941 HW revision: 0x%x\n",pmic_rev);
+/*=======
+	pr_debug("pm8941 HW revision: 0x%x\n",pmic_rev);
+>>>>>>> 0c20c8c... msm8974 - Fix the build*/
 #elif defined(CONFIG_ARCH_MSM8226)
 	pr_info("pm8x26 HW revision: 0x%x\n",pmic_rev);
 #endif

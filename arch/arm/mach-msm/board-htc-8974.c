@@ -32,6 +32,7 @@
 #include <asm/mach/arch.h>
 #include <mach/board.h>
 #include <mach/gpiomux.h>
+#include <mach/msm_kcal.h>
 #include <linux/gpio.h>
 #include <mach/msm_iomap.h>
 #ifdef CONFIG_ION_MSM
@@ -66,7 +67,7 @@
 #include "mach/htc_battery_cell.h"
 #include <linux/qpnp/qpnp-charger.h>
 #include <linux/qpnp/qpnp-bms.h>
-#endif 
+#endif
 
 #include <linux/qpnp/qpnp-adc.h>
 
@@ -92,102 +93,6 @@
 extern void mhl_sii9234_1v2_power(bool enable);
 #endif
 static int mhl_usb_sw_gpio;
-
-#ifdef CONFIG_LCD_KCAL
-#include <mach/kcal.h>
-#include <linux/module.h>
-#include "../../../drivers/video/msm/mdss/mdss_fb.h"
-extern int update_preset_lcdc_lut(void);
-
-extern int g_kcal_r;
-extern int g_kcal_g;
-extern int g_kcal_b;
-
-extern int g_kcal_min;
-
-int kcal_set_values(int kcal_r, int kcal_g, int kcal_b)
-{
-
-	if (kcal_r > 255 || kcal_r < 0)
-		kcal_r = kcal_r < 0 ? 0 : kcal_r;
-		kcal_r = kcal_r > 255 ? 255 : kcal_r;
-	if (kcal_g > 255 || kcal_g < 0)
-		kcal_g = kcal_g < 0 ? 0 : kcal_g;
-		kcal_g = kcal_g > 255 ? 255 : kcal_g;
-	if (kcal_b > 255 || kcal_b < 0)
-		kcal_b = kcal_b < 0 ? 0 : kcal_b;
-		kcal_b = kcal_b > 255 ? 255 : kcal_b;
-
-	g_kcal_r = kcal_r < g_kcal_min ? g_kcal_min : kcal_r;
-	g_kcal_g = kcal_g < g_kcal_min ? g_kcal_min : kcal_g;
-	g_kcal_b = kcal_b < g_kcal_min ? g_kcal_min : kcal_b;
-
-	if (kcal_r < g_kcal_min || kcal_g < g_kcal_min || kcal_b < g_kcal_min)
-		update_preset_lcdc_lut();
-
-	return 0;
-}
-
-static int kcal_get_values(int *kcal_r, int *kcal_g, int *kcal_b)
-{
-	*kcal_r = g_kcal_r;
-	*kcal_g = g_kcal_g;
-	*kcal_b = g_kcal_b;
-	return 0;
-}
-
-int kcal_set_min(int kcal_min)
-{
-	g_kcal_min = kcal_min;
-
-	if (g_kcal_min > 255)
-		g_kcal_min = 255;
-
-	if (g_kcal_min < 0)
-		g_kcal_min = 0;
-
-	if (g_kcal_min > g_kcal_r || g_kcal_min > g_kcal_g || g_kcal_min > g_kcal_b) {
-		g_kcal_r = g_kcal_r < g_kcal_min ? g_kcal_min : g_kcal_r;
-		g_kcal_g = g_kcal_g < g_kcal_min ? g_kcal_min : g_kcal_g;
-		g_kcal_b = g_kcal_b < g_kcal_min ? g_kcal_min : g_kcal_b;
-		update_preset_lcdc_lut();
-	}
-
-	return 0;
-}
-
-static int kcal_get_min(int *kcal_min)
-{
-	*kcal_min = g_kcal_min;
-	return 0;
-}
-
-static int kcal_refresh_values(void)
-{
-	return update_preset_lcdc_lut();
-}
-
-static struct kcal_platform_data kcal_pdata = {
-	.set_values = kcal_set_values,
-	.get_values = kcal_get_values,
-	.refresh_display = kcal_refresh_values,
-	.set_min = kcal_set_min,
-	.get_min = kcal_get_min
-};
-
-static struct platform_device kcal_platrom_device = {
-	.name = "kcal_ctrl",
-	.dev = {
-		.platform_data = &kcal_pdata,
-	}
-};
-
-void __init add_lcd_kcal_devices(void)
-{
-	pr_info (" LCD_KCAL_DEBUG : %s \n", __func__);
-	platform_device_register(&kcal_platrom_device);
-};
-#endif
 
 #define HTC_8974_PERSISTENT_RAM_PHYS 0x05B00000
 #ifdef CONFIG_HTC_BUILD_EDIAG
@@ -450,28 +355,28 @@ int __init htc_cpu_usage_register(void)
 #endif
 
 static int __maybe_unused m8wl_usb_product_id_match_array[] = {
-		0x0ff8, 0x0e65, 
-		0x0fa4, 0x0eab, 
-		0x0fa5, 0x0eac, 
-		0x0f91, 0x0ec3, 
-		0x0f64, 0x07ca, 
-		0x0f63, 0x07cb, 
-		0x0f29, 0x07c8, 
-		0x0f2a, 0x07c9, 
-		0x0f9a, 0x0eae, 
-		0x0f99, 0x0ead, 
+		0x0ff8, 0x0e65,
+		0x0fa4, 0x0eab,
+		0x0fa5, 0x0eac,
+		0x0f91, 0x0ec3,
+		0x0f64, 0x07ca,
+		0x0f63, 0x07cb,
+		0x0f29, 0x07c8,
+		0x0f2a, 0x07c9,
+		0x0f9a, 0x0eae,
+		0x0f99, 0x0ead,
 		-1,
 };
 
 static int __maybe_unused m8wl_usb_product_id_rndis[] = {
-	0x0762, 
-	0x0768, 
-	0x0763, 
-	0x0769, 
-	0x07be, 
-	0x07c2, 
-	0x07bf, 
-	0x07c3, 
+	0x0762,
+	0x0768,
+	0x0763,
+	0x0769,
+	0x07be,
+	0x07c2,
+	0x07bf,
+	0x07c3,
 };
 static int __maybe_unused m8wl_usb_product_id_match(int product_id, int intrsharing)
 {
@@ -482,7 +387,7 @@ static int __maybe_unused m8wl_usb_product_id_match(int product_id, int intrshar
 	if (!pid_array)
 		return product_id;
 
-	
+
 	if (board_mfg_mode())
 		return product_id;
 
@@ -494,16 +399,16 @@ static int __maybe_unused m8wl_usb_product_id_match(int product_id, int intrshar
 	printk("%s(%d):product_id=%d, intrsharing=%d\n", __func__, __LINE__, product_id, intrsharing);
 
 	switch (product_id) {
-		case 0x0f8c: 
+		case 0x0f8c:
 			category = 0;
 			break;
-		case 0x0f8d: 
+		case 0x0f8d:
 			category = 1;
 			break;
-		case 0x0f5f: 
+		case 0x0f5f:
 			category = 2;
 			break;
-		case 0x0f60: 
+		case 0x0f60:
 			category = 3;
 			break;
 		default:
@@ -521,7 +426,7 @@ static int __maybe_unused m8wl_usb_product_id_match(int product_id, int intrshar
 
 static struct android_usb_platform_data android_usb_pdata = {
 	.vendor_id      = 0x0bb4,
-	.product_id     = 0x060e, 
+	.product_id     = 0x060e,
 	.product_name		= "Android Phone",
 	.manufacturer_name	= "HTC",
 	.serial_number = "123456789012",
@@ -675,11 +580,11 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.force_shutdown_batt_vol = 3000,
 #if defined(CONFIG_MACH_DUMMY)
 	.usb_temp_monitor_enable = 1,
-	.usb_temp_overheat_increase_threshold = 25, 
-	.normal_usb_temp_threshold = 450, 
+	.usb_temp_overheat_increase_threshold = 25,
+	.normal_usb_temp_threshold = 450,
 	.usb_temp_overheat_threshold = 650,
 #endif
-	
+
 	.icharger.name = "pm8941",
 	.icharger.get_charging_source = pm8941_get_charging_source,
 	.icharger.get_charging_enabled = pm8941_get_charging_enabled,
@@ -711,7 +616,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 						pm8941_get_input_voltage_regulation,
 	.icharger.store_battery_charger_data = pm8941_store_battery_charger_data_emmc,
 	.icharger.set_ftm_charge_enable_type = pm8941_set_ftm_charge_enable_type,
-	
+
 	.igauge.name = "pm8941",
 	.igauge.get_battery_voltage = pm8941_get_batt_voltage,
 	.igauge.get_battery_current = pm8941_bms_get_batt_current,
@@ -736,7 +641,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.igauge.set_lower_voltage_alarm_threshold =
 						pm8941_batt_lower_alarm_threshold_set,
 	.igauge.check_soc_for_sw_ocv = pm8941_check_soc_for_sw_ocv,
-	
+
 };
 static struct platform_device htc_battery_pdev = {
 	.name = "htc_battery",
@@ -761,7 +666,7 @@ int __init htc_batt_cell_register(void)
 	platform_device_register(&htc_battery_cell_pdev);
 	return 0;
 }
-#endif 
+#endif
 
 void __init htc_8974_add_drivers(void)
 {
@@ -779,12 +684,12 @@ void __init htc_8974_add_drivers(void)
 #if defined(CONFIG_HTC_BATT_8960)
 	htc_batt_cell_register();
 	msm8974_add_batt_devices();
-#endif 
+#endif
 #if (defined(CONFIG_MACH_DUMMY) || defined(CONFIG_MACH_DUMMY))
 	syn_init_vkeys_8974();
 #endif
 	htc_8974_cable_detect_register();
-	
+
 	if (board_mfg_mode() != 6 && board_mfg_mode() != 7)
 		htc_8974_add_usb_devices();
 	else
@@ -796,9 +701,6 @@ void __init htc_8974_add_drivers(void)
 #endif
 #ifdef CONFIG_HTC_POWER_DEBUG
 	htc_cpu_usage_register();
-#endif
-#ifdef CONFIG_LCD_KCAL
-	add_lcd_kcal_devices();
 #endif
 }
 
@@ -863,7 +765,7 @@ void __init htc_8974_init_early(void)
 		pr_err("%s: not enough membank\n", __func__);
 		return;
 	}
-
+	
 	bank = &meminfo.bank[1];
 	start = bank->start + SZ_1M + HTC_8974_PERSISTENT_RAM_SIZE;
 	ret = memblock_remove(start, SZ_1M);
@@ -871,7 +773,8 @@ void __init htc_8974_init_early(void)
 		pr_info("Hardboot page reserved at 0x%X\n", start);
 	else
 		pr_err("Failed to reserve space for hardboot page at 0x%X!\n", start);
-#endif	
+#endif
+
 	persistent_ram_early_init(&htc_8974_persistent_ram);
 
 }

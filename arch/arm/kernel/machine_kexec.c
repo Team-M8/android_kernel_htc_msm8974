@@ -42,6 +42,7 @@ static atomic_t waiting_for_crash_ipi;
 
 int machine_kexec_prepare(struct kimage *image)
 {
+#ifdef CONFIG_KEXEC_HARDBOOT
 	struct kexec_segment *current_segment;
 	__be32 header;
 	int i, err;
@@ -56,10 +57,8 @@ int machine_kexec_prepare(struct kimage *image)
 		if (!err)
 			return - EINVAL;
 
-#ifdef CONFIG_KEXEC_HARDBOOT
 		if(current_segment->mem == image->start)
 			mem_text_write_kernel_word(&kexec_kernel_len, current_segment->memsz);
-#endif
 
 		err = get_user(header, (__be32*)current_segment->buf);
 		if (err)
@@ -68,11 +67,10 @@ int machine_kexec_prepare(struct kimage *image)
 		if (be32_to_cpu(header) == OF_DT_HEADER)
 		{
 			mem_text_write_kernel_word(&kexec_boot_atags, current_segment->mem);
-#ifdef CONFIG_KEXEC_HARDBOOT
 			mem_text_write_kernel_word(&kexec_boot_atags_len, current_segment->memsz);
-#endif
 		}
 	}
+#endif
 	return 0;
 }
 
@@ -160,15 +158,23 @@ void machine_kexec(struct kimage *image)
 	    page_to_pfn(image->control_code_page) << PAGE_SHIFT;
 	reboot_code_buffer = page_address(image->control_code_page);
 
+	/* Prepare parameters for reboot_code_buffer*/
+#ifdef CONFIG_KEXEC_HARDBOOT
 	mem_text_write_kernel_word(&kexec_start_address, image->start);
 	mem_text_write_kernel_word(&kexec_indirection_page, page_list);
 	mem_text_write_kernel_word(&kexec_mach_type, machine_arch_type);
 	if (!kexec_boot_atags)
 		mem_text_write_kernel_word(&kexec_boot_atags, image->start - KEXEC_ARM_ZIMAGE_OFFSET + KEXEC_ARM_ATAGS_OFFSET);
-#ifdef CONFIG_KEXEC_HARDBOOT
 	mem_text_write_kernel_word(&kexec_hardboot, image->hardboot);
-#endif
+#else
 
+	kexec_start_address = image->start;
+	kexec_indirection_page = page_list;
+	kexec_mach_type = machine_arch_type;
+	kexec_boot_atags = image->start - KEXEC_ARM_ZIMAGE_OFFSET + KEXEC_ARM_ATAGS_OFFSET;
+
+#endif
+	/* copy our kernel relocation code to the control code page */
 	memcpy(reboot_code_buffer,
 	       relocate_new_kernel, relocate_new_kernel_size);
 
