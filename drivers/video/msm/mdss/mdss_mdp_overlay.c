@@ -937,13 +937,6 @@ static int mdss_mdp_overlay_start(struct msm_fb_data_type *mfd)
 		mdss_mdp_footswitch_ctrl_splash(0);
 		if (rc)
 			goto ctl_error;
-
-		if (!is_mdss_iommu_attached())
-			rc = mdss_iommu_attach(mdss_res);
-			if (rc) {
-				pr_err("mdss iommu attach failed rc=%d\n", rc);
-				goto ctl_error;
-			}
 	}
 	if (!rc)
 		goto end;
