@@ -4,6 +4,12 @@ config INTELLI_PLUG
         help
           Generic Intelli-plug cpu hotplug driver for ARM SOCs
 
+config MAKO_HOTPLUG
+        bool "Enable Mako-hotplug cpu hotplug driver"
+        default n
+        help
+          Francisco Franco's replacement for MPDecision
+
 config BLU_PLUG
 	bool "Dynamic hotplug driver"
 	depends on HOTPLUG_CPU
