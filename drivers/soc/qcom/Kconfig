@@ -2,7 +2,13 @@
 
 if ARCH_MSM
 
+onfig STATE_HELPER
+        bool "State Helper"
+	depends on STATE_NOTIFIER
+	default y
+
 config STATE_NOTIFIER
         bool "State Notifier"
+	default y
 
 endif # ARCH_MSMs
