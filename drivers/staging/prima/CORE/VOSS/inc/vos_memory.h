@@ -235,7 +235,7 @@ v_BOOL_t vos_mem_compare(const v_VOID_t *pMemory1, const v_VOID_t *pMemory2, v_U
                        > 0 -- *pMemory1 is bigger than *pMemory2
     
   -------------------------------------------------------------------------------*/
-v_SINT_t vos_mem_compare2( v_VOID_t *pMemory1, v_VOID_t *pMemory2, v_U32_t numBytes );
+v_SINT_t vos_mem_compare2( const v_VOID_t *pMemory1, const v_VOID_t *pMemory2, v_U32_t numBytes );
 
 
 /*----------------------------------------------------------------------------
