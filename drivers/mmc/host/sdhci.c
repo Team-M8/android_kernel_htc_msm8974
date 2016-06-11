@@ -2991,9 +2991,9 @@ int sdhci_add_host(struct sdhci_host *host)
 
 	/* Any UHS-I mode in caps implies SDR12 and SDR25 support. */
 	if (caps[1] & (SDHCI_SUPPORT_SDR104 | SDHCI_SUPPORT_SDR50 |
-		       SDHCI_SUPPORT_DDR50))
+		       SDHCI_SUPPORT_DDR50)){
 		mmc->caps |= MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25;
-
+		}
 		
 		if (caps[1] & SDHCI_SUPPORT_SDR104)
 			mmc->caps |= MMC_CAP_UHS_SDR104 | MMC_CAP_UHS_SDR50;
