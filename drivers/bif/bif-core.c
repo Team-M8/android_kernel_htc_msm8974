@@ -1589,9 +1589,9 @@ static bool bif_slave_match(struct bif_ctrl *ctrl,
 	bool function_found = false;
 	bool object_found = false;
 
-    if (!ctrl)
+    if (!ctrl){
         return false;
-
+        }
 	if (ctrl->bdev != sdev->bdev)
 		return false;
 
