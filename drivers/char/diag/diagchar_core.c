@@ -1494,11 +1494,12 @@ drop:
 		COPY_USER_SPACE_OR_EXIT(buf+4, num_data, 4);
 		ret -= 4;
 		for (i = 0; i < NUM_SMD_DATA_CHANNELS; i++) {
-			if (driver->smd_data[i].ch)
+			if (driver->smd_data[i].ch){
 				queue_work(driver->diag_wq,
 				&(driver->smd_data[i].diag_read_smd_work));
 				queue_work(driver->smd_data[i].wq,
 				&(driver->smd_data[i].diag_read_smd_work));
+			}
 		}
 #ifdef CONFIG_DIAG_SDIO_PIPE
 		if (driver->sdio_ch)
@@ -1648,11 +1649,12 @@ dropd:
 		COPY_USER_SPACE_OR_EXIT(buf+4, num_data, 4);
 		ret -= 4;
 		for (i = 0; i < NUM_SMD_DATA_CHANNELS; i++) {
-			if (driver->smd_data[i].ch)
+			if (driver->smd_data[i].ch){
 				queue_work(driver->diag_wq,
 				&(driver->smd_data[i].diag_read_smd_work));
 				queue_work(driver->smd_data[i].wq,
 				&(driver->smd_data[i].diag_read_smd_work));
+			}
 		}
 #ifdef CONFIG_DIAG_SDIO_PIPE
 		if (driver->sdio_ch)
