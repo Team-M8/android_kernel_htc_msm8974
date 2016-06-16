@@ -1,0 +1,5 @@
+[gerrit]
+host=review.gerrithub.io
+port=29418
+project=Team-M8/android_kernel_htc_msm8974.git
+defaultbranch=M
