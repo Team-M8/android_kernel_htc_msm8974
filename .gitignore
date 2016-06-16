@@ -55,6 +55,7 @@ modules.builtin
 #
 !.gitignore
 !.mailmap
+!.gitreview
 
 #
 # wifi firmware file we dont want to ignore.
