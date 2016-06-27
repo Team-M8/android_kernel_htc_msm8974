@@ -5,4 +5,3 @@ obj-$(CONFIG_MSMB_CAMERA) += msm_actuator.o
 obj-$(CONFIG_TI201_ACT) += ti201_act.o LC898111/
 obj-$(CONFIG_RUMBAS_ACT) += rumbas_act.o
 
-KBUILD_CFLAGS	+=-Wno-misleading-indentation

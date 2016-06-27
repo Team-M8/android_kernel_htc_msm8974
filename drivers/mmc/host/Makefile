@@ -62,4 +62,3 @@ ifeq ($(CONFIG_CB710_DEBUG),y)
 	CFLAGS-cb710-mmc	+= -DDEBUG
 endif
 
-KBUILD_CFLAGS	+=-Wno-misleading-indentation

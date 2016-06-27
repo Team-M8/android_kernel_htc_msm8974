@@ -1032,8 +1032,9 @@ static ssize_t oom_score_adj_write(struct file *file, const char __user *buf,
 		task->signal->oom_adj = OOM_ADJUST_MAX;
 	} else {
 		int mult = 1;
-		if (task->signal->oom_score_adj < 0)
+		if (task->signal->oom_score_adj < 0){
 			mult = -1;
+			}
 			task->signal->oom_adj = roundup(mult * task->signal->oom_score_adj *
 					-OOM_DISABLE, OOM_SCORE_ADJ_MAX) /
 					OOM_SCORE_ADJ_MAX * mult;

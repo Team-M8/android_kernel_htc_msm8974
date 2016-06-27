@@ -356,7 +356,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
 LDFLAGS_MODULE  =
-CFLAGS_KERNEL	= -fgcse-lm -fgcse-sm -fsched-spec-load -fmodulo-sched -fmodulo-sched-allow-regmoves -fsingle-precision-constant -ftree-vectorize -marm -mfpu=neon-vfpv4 -munaligned-access -mtune=cortex-a15 -mvectorize-with-neon-quad -fno-strict-aliasing
+CFLAGS_KERNEL	= -fgcse-lm -fgcse-sm -fsched-spec-load -fmodulo-sched -fmodulo-sched-allow-regmoves -fsingle-precision-constant -ftree-vectorize -marm -mfpu=neon-vfpv4 -munaligned-access -mtune=cortex-a15 -mvectorize-with-neon-quad -fno-strict-aliasing 
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
@@ -372,7 +372,7 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -fno-common \
 		   -Werror-implicit-function-declaration \
-		   -std=gnu89 -O2
+		   -std=gnu89 -O2 -Wmisleading-indentation
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__

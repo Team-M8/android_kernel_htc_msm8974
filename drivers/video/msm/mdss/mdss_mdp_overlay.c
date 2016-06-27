@@ -940,7 +940,7 @@ static int mdss_mdp_overlay_start(struct msm_fb_data_type *mfd)
 
 		if (!is_mdss_iommu_attached())
 			rc = mdss_iommu_attach(mdss_res);
-			if (rc) {
+		   if (rc) {
 				pr_err("mdss iommu attach failed rc=%d\n", rc);
 				goto ctl_error;
 			}

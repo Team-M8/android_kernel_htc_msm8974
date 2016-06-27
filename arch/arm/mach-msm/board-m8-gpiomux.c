@@ -1240,7 +1240,7 @@ void __init msm_htc_8974_init_gpiomux(void)
     else
         msm_gpiomux_install(msm_sensor_configs_non_china_sku, ARRAY_SIZE(msm_sensor_configs_non_china_sku));
 
-	msm_gpiomux_install(&nfc_irq_config, 1);
+msm_gpiomux_install(&nfc_irq_config, 1);
 
 	msm_gpiomux_install(&sd_card_det, 1);
 
