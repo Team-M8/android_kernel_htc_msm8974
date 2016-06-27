@@ -849,7 +849,7 @@ static int projector2_function_set_alt(struct usb_function *f,
 #endif
         projector2_queue_out(dev);
 
-	return 0;
+return 0;
 }
 
 
@@ -925,7 +925,7 @@ static void projector2_function_disable(struct usb_function *f)
 #endif
         usb_ep_disable(dev->ep_out);
 
-	if (atomic_read(&dev->prj2_status) != PRJ2_OFFLINE) {
+if (atomic_read(&dev->prj2_status) != PRJ2_OFFLINE) {
 		atomic_set(&dev->prj2_status, PRJ2_OFFLINE);
 		schedule_work(&dev->notifier_display_work);
 	}

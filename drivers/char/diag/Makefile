@@ -6,4 +6,3 @@ obj-$(CONFIG_DIAGFWD_BRIDGE_CODE) += diagfwd_smux.o
 diagchar-objs := diagchar_core.o diagchar_hdlc.o diagfwd.o diagmem.o diagfwd_cntl.o diag_dci.o diag_masks.o diag_debugfs.o
 
 KBUILD_CFLAGS	+=-Wno-unused-const-variable
-KBUILD_CFLAGS	+=-Wno-misleading-indentation

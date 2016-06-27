@@ -28,4 +28,3 @@ obj-$(CONFIG_MSM_QDSP6V2_CODECS)  += audio_mp3.o audio_amrnb.o audio_amrwb.o aud
 obj-$(CONFIG_MSM_ADSP_LOADER) += adsp-loader.o
 obj-$(CONFIG_MSM_ULTRASOUND_A) += ultrasound/version_a/
 obj-$(CONFIG_MSM_ULTRASOUND_B) += ultrasound/version_b/
-KBUILD_CFLAGS	+=-Wno-misleading-indentation

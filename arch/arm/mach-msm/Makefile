@@ -483,4 +483,3 @@ obj-$(CONFIG_HAS_MACH_MEMUTILS) += memutils/
 obj-$(CONFIG_LCD_KCAL) += msm_kcal_ctrl.o
 
 KBUILD_CFLAGS	+=-Wno-unused-const-variable
-KBUILD_CFLAGS	+=-Wno-misleading-indentation

@@ -356,7 +356,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
 LDFLAGS_MODULE  =
-CFLAGS_KERNEL	= -fgcse-lm -fgcse-sm -fsched-spec-load -fmodulo-sched -fmodulo-sched-allow-regmoves -fsingle-precision-constant -ftree-vectorize -marm -mfpu=neon-vfpv4 -munaligned-access -mtune=cortex-a15 -mvectorize-with-neon-quad -fno-strict-aliasing
+CFLAGS_KERNEL	= -fgcse-lm -fgcse-sm -fsched-spec-load -fmodulo-sched -fmodulo-sched-allow-regmoves -fsingle-precision-constant -ftree-vectorize -marm -mfpu=neon-vfpv4 -munaligned-access -mtune=cortex-a15 -mvectorize-with-neon-quad -fno-strict-aliasing 
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 

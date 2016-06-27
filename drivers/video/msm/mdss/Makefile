@@ -52,4 +52,3 @@ obj-$(CONFIG_FB_MSM_MDSS) += lcd_notify.o
 obj-$(CONFIG_FB_MSM_MDSS_KCAL_CTRL) += mdss_mdp_kcal_ctrl.o
 
 KBUILD_CFLAGS	+=-Wno-unused-const-variable
-KBUILD_CFLAGS	+=-Wno-misleading-indentation

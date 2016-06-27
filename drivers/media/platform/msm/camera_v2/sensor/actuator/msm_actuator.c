@@ -2114,7 +2114,7 @@ static int32_t msm_actuator_init(struct msm_actuator_ctrl_t *a_ctrl,
 		}
 	}
 
-	a_ctrl->initial_code = set_info->af_tuning_params.initial_code;
+a_ctrl->initial_code = set_info->af_tuning_params.initial_code;
 
 	a_ctrl->curr_step_pos = 0;
 	a_ctrl->curr_region_index = 0;
