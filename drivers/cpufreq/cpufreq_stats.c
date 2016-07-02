@@ -54,12 +54,6 @@ struct all_cpufreq_stats {
 	unsigned int *freq_table;
 };
 
-struct cpufreq_power_stats {
-	unsigned int state_num;
-	unsigned int *curr;
-	unsigned int *freq_table;
-};
-
 struct all_freq_table {
 	unsigned int *freq_table;
 	unsigned int table_size;
@@ -69,7 +63,6 @@ static struct all_freq_table *all_freq_table;
 
 static DEFINE_PER_CPU(struct all_cpufreq_stats *, all_cpufreq_stats);
 static DEFINE_PER_CPU(struct cpufreq_stats *, cpufreq_stats_table);
-static DEFINE_PER_CPU(struct cpufreq_power_stats *, cpufreq_power_stats);
 
 struct cpufreq_stats_attribute {
 	struct attribute attr;
@@ -140,42 +133,15 @@ static int get_index_all_cpufreq_stat(struct all_cpufreq_stats *all_stat,
 	return -1;
 }
 
-void acct_update_power(struct task_struct *task, cputime_t cputime) {
-	struct cpufreq_power_stats *powerstats;
-	struct cpufreq_stats *stats;
-	unsigned int cpu_num, curr;
-
-	if (!task)
-		return;
-	cpu_num = task_cpu(task);
-	powerstats = per_cpu(cpufreq_power_stats, cpu_num);
-	stats = per_cpu(cpufreq_stats_table, cpu_num);
-	if (!powerstats || !stats)
-		return;
-
-	curr = powerstats->curr[stats->last_index];
-	if (task->cpu_power != ULLONG_MAX)
-		task->cpu_power += curr * cputime_to_usecs(cputime);
-}
-EXPORT_SYMBOL_GPL(acct_update_power);
-
 static ssize_t show_current_in_state(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
 	ssize_t len = 0;
-	unsigned int i, cpu;
-	struct cpufreq_power_stats *powerstats;
+	unsigned int cpu;
 
 	spin_lock(&cpufreq_stats_lock);
 	for_each_possible_cpu(cpu) {
-		powerstats = per_cpu(cpufreq_power_stats, cpu);
-		if (!powerstats)
-			continue;
 		len += scnprintf(buf + len, PAGE_SIZE - len, "CPU%d:", cpu);
-		for (i = 0; i < powerstats->state_num; i++)
-			len += scnprintf(buf + len, PAGE_SIZE - len,
-					"%d=%d ", powerstats->freq_table[i],
-					powerstats->curr[i]);
 		len += scnprintf(buf + len, PAGE_SIZE - len, "\n");
 	}
 	spin_unlock(&cpufreq_stats_lock);
@@ -345,23 +311,6 @@ static void cpufreq_allstats_free(void)
 	}
 }
 
-static void cpufreq_powerstats_free(void)
-{
-	int cpu;
-	struct cpufreq_power_stats *powerstats;
-
-	sysfs_remove_file(cpufreq_global_kobject, &_attr_current_in_state.attr);
-
-	for_each_possible_cpu(cpu) {
-		powerstats = per_cpu(cpufreq_power_stats, cpu);
-		if (!powerstats)
-			continue;
-		kfree(powerstats->curr);
-		kfree(powerstats);
-		per_cpu(cpufreq_power_stats, cpu) = NULL;
-	}
-}
-
 static int cpufreq_stats_create_table(struct cpufreq_policy *policy,
 		struct cpufreq_frequency_table *table, int count)
 {
@@ -427,54 +376,6 @@ error_get_fail:
 	kfree(stat);
 	per_cpu(cpufreq_stats_table, cpu) = NULL;
 	return ret;
-}
-
-static void cpufreq_powerstats_create(unsigned int cpu,
-		struct cpufreq_frequency_table *table, int count) {
-	unsigned int alloc_size, i = 0, j = 0, ret = 0;
-	struct cpufreq_power_stats *powerstats;
-	struct device_node *cpu_node;
-	char device_path[16];
-
-	powerstats = kzalloc(sizeof(struct cpufreq_power_stats),
-			GFP_KERNEL);
-	if (!powerstats)
-		return;
-
-	/* Allocate memory for freq table per cpu as well as clockticks per
-	 * freq*/
-	alloc_size = count * sizeof(unsigned int) +
-		count * sizeof(unsigned int);
-	powerstats->curr = kzalloc(alloc_size, GFP_KERNEL);
-	if (!powerstats->curr) {
-		kfree(powerstats);
-		return;
-	}
-	powerstats->freq_table = powerstats->curr + count;
-
-	spin_lock(&cpufreq_stats_lock);
-	for (i = 0; table[i].frequency != CPUFREQ_TABLE_END && j < count; i++) {
-		unsigned int freq = table[i].frequency;
-
-		if (freq == CPUFREQ_ENTRY_INVALID)
-			continue;
-		powerstats->freq_table[j++] = freq;
-	}
-	powerstats->state_num = j;
-
-	snprintf(device_path, sizeof(device_path), "/cpus/cpu@%d", cpu);
-	cpu_node = of_find_node_by_path(device_path);
-	if (cpu_node) {
-		ret = of_property_read_u32_array(cpu_node, "current",
-				powerstats->curr, count);
-		if (ret) {
-			kfree(powerstats->curr);
-			kfree(powerstats);
-			powerstats = NULL;
-		}
-	}
-	per_cpu(cpufreq_power_stats, cpu) = powerstats;
-	spin_unlock(&cpufreq_stats_lock);
 }
 
 static int compare_for_sort(const void *lhs_ptr, const void *rhs_ptr)
@@ -591,9 +492,6 @@ static int cpufreq_stat_notifier_policy(struct notifier_block *nb,
 	if (!per_cpu(all_cpufreq_stats, cpu))
 		cpufreq_allstats_create(cpu, table, count);
 
-	if (!per_cpu(cpufreq_power_stats, cpu))
-		cpufreq_powerstats_create(cpu, table, count);
-
 	ret = cpufreq_stats_create_table(policy, table, count);
 
 	return (ret == -EBUSY)? 0 : ret;
@@ -659,9 +557,6 @@ static int cpufreq_stats_create_table_cpu(unsigned int cpu)
 
 	if (!per_cpu(all_cpufreq_stats, cpu))
 		cpufreq_allstats_create(cpu, table, count);
-
-	if (!per_cpu(cpufreq_power_stats, cpu))
-		cpufreq_powerstats_create(cpu, table, count);
 
 	ret = cpufreq_stats_create_table(policy, table, count);
 
@@ -761,7 +656,6 @@ static void __exit cpufreq_stats_exit(void)
 		cpufreq_stats_free_sysfs(cpu);
 	}
 	cpufreq_allstats_free();
-	cpufreq_powerstats_free();
 }
 
 MODULE_AUTHOR("Zou Nan hai <nanhai.zou@intel.com>");

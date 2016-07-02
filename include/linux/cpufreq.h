@@ -452,6 +452,4 @@ void cpufreq_frequency_table_put_attr(unsigned int cpu);
  *                         CPUFREQ STATS                             *
  *********************************************************************/
 
-void acct_update_power(struct task_struct *p, cputime_t cputime);
-
 #endif /* _LINUX_CPUFREQ_H */
