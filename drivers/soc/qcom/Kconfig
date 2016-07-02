@@ -1,0 +1,8 @@
+# When adding new entries keep the list in alphabetical order
+
+if ARCH_MSM
+
+config STATE_NOTIFIER
+        bool "State Notifier"
+
+endif # ARCH_MSMs

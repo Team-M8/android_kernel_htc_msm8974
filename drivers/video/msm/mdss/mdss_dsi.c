@@ -28,6 +28,10 @@
 #include "mdss_dsi.h"
 #include "mdss_debug.h"
 
+#ifdef CONFIG_STATE_NOTIFIER
+#include <linux/state_notifier.h>
+#endif
+
 static unsigned char *mdss_dsi_base;
 struct mdss_dsi_pwrctrl pwrctrl_pdata;
 
@@ -863,6 +867,9 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 			rc = mdss_dsi_unblank(pdata);
 		lcd_notifier_call_chain(LCD_EVENT_ON_END);
 		break;
+#ifdef CONFIG_STATE_NOTIFIER
+ 	state_resume();
+#endif
 	case MDSS_EVENT_BLANK:
 		lcd_notifier_call_chain(LCD_EVENT_OFF_START);
 		if (ctrl_pdata->off_cmds.link_state == DSI_HS_MODE)
@@ -874,6 +881,9 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 			rc = mdss_dsi_blank(pdata);
 		rc = mdss_dsi_off(pdata);
 		lcd_notifier_call_chain(LCD_EVENT_OFF_END);
+#ifdef CONFIG_STATE_NOTIFIER
+	state_suspend();
+#endif
 		break;
 	case MDSS_EVENT_CONT_SPLASH_FINISH:
 		ctrl_pdata->ctrl_state &= ~CTRL_STATE_MDP_ACTIVE;
