@@ -2,7 +2,7 @@
 
 if ARCH_MSM
 
-onfig STATE_HELPER
+config STATE_HELPER
         bool "State Helper"
 	depends on STATE_NOTIFIER
 	default y
