@@ -48,4 +48,3 @@ obj-$(CONFIG_MSM_KGSL) += msm_kgsl_core.o
 obj-$(CONFIG_MSM_KGSL) += msm_adreno.o
 obj-$(CONFIG_MSM_KGSL_2D) += msm_z180.o
 
-KBUILD_CFLAGS	+=-Wno-misleading-indentation -O3 -ffast-math -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -fsingle-precision-constant -mcpu=cortex-a15 -mtune=cortex-a15 -marm -mfpu=neon-vfpv4
