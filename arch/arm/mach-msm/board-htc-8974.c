@@ -680,11 +680,7 @@ void __init htc_8974_add_drivers(void)
 	krait_power_init();
 	msm_clock_init(&msm8974_clock_init_data);
 	tsens_tm_init_driver();
-#ifdef CONFIG_INTELLI_THERMAL
-	msm_thermal_init(NULL);
-#else
 	msm_thermal_device_init();
-#endif
 #if defined(CONFIG_HTC_BATT_8960)
 	htc_batt_cell_register();
 	msm8974_add_batt_devices();
